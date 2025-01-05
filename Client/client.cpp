@@ -25,6 +25,8 @@ Client::Client(const char* a_clientName, const char* a_serverIPv4Address, unsign
     {
         throw "Failed to connect to the server!";
     }
+
+    delete serverAddress;
 }
 
 Client::~Client()
