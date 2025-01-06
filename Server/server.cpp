@@ -37,11 +37,11 @@ void Server::setPortNumber(unsigned short a_portNumber)
 
 void Server::listenToClient(void)
 {
-    if(!listen(this->fileDescriptor, 1)) /* 1 is the number of client to be queued, I will change it later. */
+    if(!listen(this->fileDescriptor, 2)) /* 1 is the number of client to be queued, I will change it later. */
     {
         unsigned int clientAddressSize = 0;
         sockaddr_in* clientAddress = new sockaddr_in;
-        int clientFileDescriptor = accept(this->fileDescriptor, (sockaddr*)clientAddress, &clientAddressSize);
+        this->clientFileDescriptor = accept(this->fileDescriptor, (sockaddr*)clientAddress, &clientAddressSize);
         
         if(clientFileDescriptor < 0)
         {
@@ -52,10 +52,10 @@ void Server::listenToClient(void)
 
 void Server::sendMessage(const char* a_messageContent, int a_messageLength)
 {
-    /* =============== */
+    send(this->clientFileDescriptor, a_messageContent, a_messageLength, 0);
 }
 
 void Server::receiveMessage(char* a_messageBuffer)
 {
-    /* =============== */
+    recv(this->clientFileDescriptor, a_messageBuffer, 1024, 0);
 }
