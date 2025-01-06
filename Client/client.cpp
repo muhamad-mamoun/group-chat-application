@@ -2,9 +2,28 @@
 #include <netinet/in.h>
 #include "client.hpp"
 
-Client::Client(const char* a_clientName, const char* a_serverIPv4Address, unsigned short a_serverPortNumber)
+Client::Client(const char* a_clientName, const char* a_serverSocketAddress)
 {
     this->name = nullptr;
+    this->serverPortNumber = 0;
+    this->serverIPv4Address = 0;
+    this->setName(a_clientName);
+    this->setServerSocketAddress(a_serverSocketAddress);
+
+    this->fileDescriptor = socket(AF_INET, SOCK_STREAM, 0);
+    if(this->fileDescriptor < 0)
+    {
+        throw "Failed to create a socket!";
+    }
+
+    this->connectToServer();
+}
+
+Client::Client(const char* a_clientName, const char* a_serverIPv4Address, const char* a_serverPortNumber)
+{
+    this->name = nullptr;
+    this->serverPortNumber = 0;
+    this->serverIPv4Address = 0;
     this->setName(a_clientName);
     this->setServerIPv4Address(a_serverIPv4Address);
     this->setServerPortNumber(a_serverPortNumber);
@@ -15,6 +34,11 @@ Client::Client(const char* a_clientName, const char* a_serverIPv4Address, unsign
         throw "Failed to create a socket!";
     }
 
+    this->connectToServer();
+}
+
+void Client::connectToServer(void)
+{
     sockaddr_in* serverAddress = new sockaddr_in;
     serverAddress->sin_family = AF_INET;
     serverAddress->sin_addr.s_addr = this->serverIPv4Address;
@@ -47,6 +71,20 @@ void Client::setName(const char* a_clientName)
     {
         *(this->name + characterIndex) = *(a_clientName + characterIndex);
     }
+}
+
+void Client::setServerSocketAddress(const char* a_serverSocketAddress)
+{
+    const char* serverIPv4Address = a_serverSocketAddress;
+    const char* serverPortNumber = nullptr;
+    int characterIndex = 0;
+
+    for(; *(a_serverSocketAddress + characterIndex) != ':'; characterIndex++);
+    *((char*)a_serverSocketAddress + characterIndex) = '\0'; /* Sorry C++ */
+    serverPortNumber = (a_serverSocketAddress + characterIndex + 1);
+
+    this->setServerIPv4Address(serverIPv4Address);
+    this->setServerPortNumber(serverPortNumber);
 }
 
 void Client::setServerIPv4Address(const char* a_serverIPv4Address)
@@ -93,9 +131,29 @@ void Client::setServerIPv4Address(const char* a_serverIPv4Address)
     this->serverIPv4Address = ((IPv4Segments[0] << 24) | (IPv4Segments[0] << 16) | (IPv4Segments[0] << 8) | IPv4Segments[0]);
 }
 
-void Client::setServerPortNumber(unsigned short a_serverPortNumber)
+void Client::setServerPortNumber(const char* a_serverPortNumber)
 {
-    this->serverPortNumber = ((a_serverPortNumber >> 8) | (a_serverPortNumber << 8));
+    for(char characterIndex = 0; *(a_serverPortNumber + characterIndex) != '\0'; characterIndex++)
+    {
+        char currentCharacter = *(a_serverPortNumber + characterIndex);
+
+        if(!Client::isDigit(currentCharacter))
+        {
+            throw "Invalid port number!";
+        }
+
+        else if(((this->serverPortNumber * 10) + (currentCharacter - '0')) > 65535UL)
+        {
+            throw "Invalid port number!";
+        }
+
+        else
+        {
+            this->serverPortNumber = ((this->serverPortNumber * 10) + (currentCharacter - '0'));
+        }
+    }
+
+    this->serverPortNumber = ((this->serverPortNumber >> 8) | (this->serverPortNumber << 8));
 }
 
 void Client::sendMessage(const char* a_messageContent, int a_messageLength)
