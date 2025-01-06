@@ -1,6 +1,7 @@
+#include "client.hpp"
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include "client.hpp"
+#include <unistd.h>
 
 Client::Client(const char* a_clientName, const char* a_serverSocketAddress)
 {
@@ -55,6 +56,8 @@ void Client::connectToServer(void)
 
 Client::~Client()
 {
+    shutdown(this->fileDescriptor, SHUT_RDWR);
+    close(this->fileDescriptor);
     delete[] this->name;
 }
 

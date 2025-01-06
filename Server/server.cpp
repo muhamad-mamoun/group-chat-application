@@ -1,6 +1,7 @@
+#include "server.hpp"
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include "server.hpp"
+#include <unistd.h>
 
 Server::Server(unsigned long a_portNumber)
 {
@@ -27,7 +28,8 @@ Server::Server(unsigned long a_portNumber)
 
 Server::~Server()
 {
-    /* =============== */
+    shutdown(this->fileDescriptor, SHUT_RDWR);
+    close(this->fileDescriptor);
 }
 
 void Server::setPortNumber(unsigned short a_portNumber)
