@@ -1,44 +1,112 @@
+#include "../Utils/console.hpp"
 #include "client.hpp"
 #include <iostream>
+#include <cstring>
 #include <chrono>
 
-void displayTime(void)
+char* serverSocketAddress = nullptr;
+char* serverIPv4Address = nullptr;
+char* serverPortNumber = nullptr;
+char* clientName = nullptr;
+
+void getServerIPv4Address(void)
 {
-    std::time_t currentTime = std::chrono::high_resolution_clock::to_time_t(std::chrono::high_resolution_clock::now());
-    
-    std::cout << "[";
-    std::cout << (std::localtime(&currentTime)->tm_year + 1900) << "-";
-    std::cout << (std::localtime(&currentTime)->tm_mon + 1) << "-";
-    std::cout << std::localtime(&currentTime)->tm_mday << " ";
-    std::cout << std::localtime(&currentTime)->tm_hour << ":";
-    std::cout << std::localtime(&currentTime)->tm_min << ":";
-    std::cout << std::localtime(&currentTime)->tm_sec << "] ";
+    serverIPv4Address = new char[16]();
+    std::cout << "Enter Server IPv4: ";
+    std::cin >> serverIPv4Address;
 }
 
-void getClientName(char** a_clientName)
+void getServerPort(void)
 {
-    *a_clientName = new char[50];
+    serverPortNumber = new char[6]();
+    std::cout << "Enter Server Port: ";
+    std::cin >> serverPortNumber;
+}
+
+void getClientName(void)
+{
+    clientName = new char[50]();
     std::cout << "Enter your name: ";
-    std::cin >> *a_clientName;
+    std::cin >> clientName;
+}
+
+void parseArguments(int a_argCounter, char** a_argValues)
+{
+    while(a_argCounter != 1) /* Ignore the 1st argument [Program Name]. */
+    {
+        if(!std::strcmp(*(a_argValues + a_argCounter - 2), "-s"))
+        {
+            serverSocketAddress = *(a_argValues + a_argCounter - 1);
+            a_argCounter -= 2;
+        }
+
+        else if(!std::strcmp(*(a_argValues + a_argCounter - 2), "-i"))
+        {
+            serverIPv4Address = *(a_argValues + a_argCounter - 1);
+            a_argCounter -= 2;
+        }
+
+        else if(!std::strcmp(*(a_argValues + a_argCounter - 2), "-p"))
+        {
+            serverPortNumber = *(a_argValues + a_argCounter - 1);
+            a_argCounter -= 2;
+        }
+
+        else if(!std::strcmp(*(a_argValues + a_argCounter - 2), "-n"))
+        {
+            clientName = *(a_argValues + a_argCounter - 1);
+            a_argCounter -= 2;
+        }
+
+        else
+        {
+            throw "Inavalid arguments list!";
+        }
+    }
+}
+
+void startSession(Client* a_myClient)
+{
+    char* messageBuffer = new char[1024]();
+
+    do
+    {
+        std::fill(messageBuffer, (messageBuffer + 1023), '\0');
+
+        std::cout << ">_ ";
+        std::cin.getline(messageBuffer, 1024);
+        a_myClient->sendMessage(messageBuffer, strlen(messageBuffer));
+
+    } while(strcmp(messageBuffer, "exit"));
 }
 
 int main(int argc, char** argv)
 {
-    char* clientName = nullptr;
-    
-    if(argc == 2) clientName = argv[1];
-    else getClientName(&clientName);
-    
+    Client* myClient = nullptr;
+
+    try {parseArguments(argc, argv);}
+    catch(const char* a_exceptionMessage) {ConsUtils::displayError(a_exceptionMessage);};
+
+    if((serverIPv4Address == nullptr) && (serverSocketAddress == nullptr)) getServerIPv4Address();
+    if((serverPortNumber == nullptr) && (serverSocketAddress == nullptr)) getServerPort();
+    if(clientName == nullptr) getClientName();
+
     std::cout << "Welcome, " << clientName << "!" << std::endl;
 
-    try {Client myClient(clientName, "127.0.0.1", 3232);}
-    catch(const char* a_exceptionMessage)
+    try
     {
-        std::cout << "\r";
-        displayTime();
-        std::cout << "[ERROR]: " << a_exceptionMessage << std::endl;
+        if(serverSocketAddress) myClient = new Client(clientName, serverSocketAddress);
+        else myClient = new Client(clientName, serverIPv4Address, serverPortNumber);
+        startSession(myClient);
+    }
+    catch(const char* a_exceptionMessage) {ConsUtils::displayError(a_exceptionMessage);}
+
+    if(argc == 1)
+    {
+        delete[] serverIPv4Address;
+        delete[] serverPortNumber;
+        delete[] clientName;
     }
 
-    if(argc != 2) delete[] clientName;
     return 0;
 }
