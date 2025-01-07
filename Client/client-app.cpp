@@ -2,8 +2,9 @@
 #include "client.hpp"
 #include <iostream>
 #include <cstring>
-#include <chrono>
+#include <thread>
 
+bool activeSessionFlag = false;
 char* serverSocketAddress = nullptr;
 char* serverIPv4Address = nullptr;
 char* serverPortNumber = nullptr;
@@ -65,19 +66,47 @@ void parseArguments(int a_argCounter, char** a_argValues)
     }
 }
 
-void startSession(Client* a_myClient)
+void sendMessage(Client* a_myClient)
 {
     char* messageBuffer = new char[1024]();
 
-    do
+    while(activeSessionFlag)
     {
         std::fill(messageBuffer, (messageBuffer + 1023), '\0');
 
-        std::cout << ">_ ";
+        std::cout << "\r>_ ";
         std::cin.getline(messageBuffer, 1024);
         a_myClient->sendMessage(messageBuffer, strlen(messageBuffer));
+        if(!strcmp(messageBuffer, "exit")) activeSessionFlag = false;
+    }
+    
+    delete[] messageBuffer;
+}
 
-    } while(strcmp(messageBuffer, "exit"));
+void receiveMessage(Client* a_myClient)
+{
+    char* messageBuffer = new char[1024]();
+    
+    while(activeSessionFlag)
+    {
+        std::fill(messageBuffer, (messageBuffer + 1023), '\0');
+        a_myClient->receiveMessage(messageBuffer);
+
+        if(strlen(messageBuffer)) std::cout << "\r" << messageBuffer << "\n\r>_ " << std::flush;
+    }
+
+    delete[] messageBuffer;
+}
+
+void startSession(Client* a_myClient)
+{
+    std::thread sendingThread(sendMessage, a_myClient);
+    std::thread receivingThread(receiveMessage, a_myClient);
+
+    activeSessionFlag = true;
+    sendingThread.join();
+    activeSessionFlag = false;
+    receivingThread.detach();
 }
 
 int main(int argc, char** argv)
@@ -108,5 +137,6 @@ int main(int argc, char** argv)
         delete[] clientName;
     }
 
+    delete myClient;
     return 0;
 }

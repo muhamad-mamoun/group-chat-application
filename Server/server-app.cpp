@@ -18,10 +18,13 @@ int main(void)
     do
     {
         std::fill(messageBuffer, (messageBuffer + 1023), '\0');
-        myServer->receiveMessage(messageBuffer);
+        strcpy(messageBuffer, "[Mamoun]: ");
+        myServer->receiveMessage(messageBuffer + 10);
         myServer->sendMessage(messageBuffer, strlen(messageBuffer));
-        if(strlen(messageBuffer)) std::cout << "[Mamoun]: " << messageBuffer << std::endl;
+        if(strlen(messageBuffer)) std::cout << messageBuffer << std::endl;
     } while(strcmp(messageBuffer, "exit"));
-    
+
+    delete[] messageBuffer;
+    delete myServer;
     return 0;
 }
