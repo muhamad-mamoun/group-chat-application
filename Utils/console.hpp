@@ -10,5 +10,4 @@ namespace ConsUtils
 
     void changeConsoleColor(ConsUtils::consoleColor a_color);
     void displayError(const char* a_errorMessage);
-    void displayTime(void);
 };
