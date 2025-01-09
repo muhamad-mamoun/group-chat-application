@@ -164,9 +164,9 @@ void Client::sendMessage(const char* a_messageContent, int a_messageLength)
     send(this->fileDescriptor, a_messageContent, a_messageLength, 0);
 }
 
-void Client::receiveMessage(char* a_messageBuffer)
+void Client::receiveMessage(char* a_messageBuffer, int a_bufferSize)
 {
-    recv(this->fileDescriptor, a_messageBuffer, sizeof(a_messageBuffer), 0);
+    recv(this->fileDescriptor, a_messageBuffer, a_bufferSize, 0);
 }
 
 bool Client::isDigit(const char a_character)

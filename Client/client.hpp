@@ -21,5 +21,5 @@ public:
     Client(const char* a_clientName, const char* a_serverIPv4Address, const char* a_serverPortNumber);
     ~Client();
     void sendMessage(const char* a_messageContent, int a_messageLength);
-    void receiveMessage(char* a_messageBuffer);
+    void receiveMessage(char* a_messageBuffer, int a_bufferSize);
 };
