@@ -169,6 +169,11 @@ void Client::receiveMessage(char* a_messageBuffer, int a_bufferSize)
     recv(this->fileDescriptor, a_messageBuffer, a_bufferSize, 0);
 }
 
+void Client::setConnectionStatus(bool a_connectionStatus)
+{
+    this->connectionStatus = a_connectionStatus;
+}
+
 bool Client::getConnectionStatus(void)
 {
     return this->connectionStatus;
