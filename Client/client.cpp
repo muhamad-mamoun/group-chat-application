@@ -169,6 +169,11 @@ void Client::receiveMessage(char* a_messageBuffer, int a_bufferSize)
     recv(this->fileDescriptor, a_messageBuffer, a_bufferSize, 0);
 }
 
+bool Client::getConnectionStatus(void)
+{
+    return this->connectionStatus;
+}
+
 bool Client::isDigit(const char a_character)
 {
     return ((a_character >= '0') && (a_character <= '9'));

@@ -22,4 +22,5 @@ public:
     ~Client();
     void sendMessage(const char* a_messageContent, int a_messageLength);
     void receiveMessage(char* a_messageBuffer, int a_bufferSize);
+    bool getConnectionStatus(void);
 };
