@@ -3,7 +3,7 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
-Server::Server(unsigned long a_portNumber)
+Server::Server(unsigned long a_portNumber, int a_maxAllowedClients)
 {
     this->setPortNumber(a_portNumber);
     this->fileDescriptor = socket(AF_INET, SOCK_STREAM, 0);
@@ -23,6 +23,11 @@ Server::Server(unsigned long a_portNumber)
         throw "Failed to bound the port!";
     }
 
+    if(listen(this->fileDescriptor, a_maxAllowedClients) < 0)
+    {
+        throw "Failed to prepare the server to listen!";
+    }
+
     delete serverAddress;
 }
 
@@ -37,27 +42,19 @@ void Server::setPortNumber(unsigned short a_portNumber)
     this->portNumber = ((a_portNumber >> 8) | (a_portNumber << 8));
 }
 
-void Server::listenToClient(void)
+void Server::listenToNewClient(int* a_clientFileDescriptor)
 {
-    if(!listen(this->fileDescriptor, 2)) /* 1 is the number of client to be queued, I will change it later. */
-    {
-        unsigned int clientAddressSize = 0;
-        sockaddr_in* clientAddress = new sockaddr_in;
-        this->clientFileDescriptor = accept(this->fileDescriptor, (sockaddr*)clientAddress, &clientAddressSize);
-        
-        if(clientFileDescriptor < 0)
-        {
-            throw "Failed to connect to a client!";
-        }
-    }
+    sockaddr_in clientAddress;
+    unsigned int clientAddressSize = 0;
+    *a_clientFileDescriptor = accept(this->fileDescriptor, (sockaddr*)(&clientAddress), &clientAddressSize);
 }
 
-void Server::sendMessage(const char* a_messageContent, int a_messageLength)
+void Server::sendMessage(int a_clientFileDescriptor, const char* a_messageContent, int a_messageLength)
 {
-    send(this->clientFileDescriptor, a_messageContent, a_messageLength, 0);
+    send(a_clientFileDescriptor, a_messageContent, a_messageLength, 0);
 }
 
-void Server::receiveMessage(char* a_messageBuffer)
+void Server::receiveMessage(int a_clientFileDescriptor, char* a_messageBuffer, int a_bufferSize)
 {
-    recv(this->clientFileDescriptor, a_messageBuffer, 1024, 0);
+    recv(a_clientFileDescriptor, a_messageBuffer, a_bufferSize, 0);
 }

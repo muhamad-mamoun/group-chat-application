@@ -4,15 +4,14 @@ class Server
 {
 private:
     int fileDescriptor;
-    int clientFileDescriptor;
     unsigned short portNumber;
     void setPortNumber(unsigned short a_portNumber);
 protected:
 public:
     Server() = delete;
-    Server(unsigned long a_portNumber);
+    Server(unsigned long a_portNumber, int a_maxAllowedClients);
     ~Server();
-    void listenToClient(void);
-    void sendMessage(const char* a_messageContent, int a_messageLength);
-    void receiveMessage(char* a_messageBuffer);
+    void listenToNewClient(int* a_clientFileDescriptor);
+    void sendMessage(int a_clientFileDescriptor, const char* a_messageContent, int a_messageLength);
+    void receiveMessage(int a_clientFileDescriptor, char* a_messageBuffer, int a_bufferSize);
 };
