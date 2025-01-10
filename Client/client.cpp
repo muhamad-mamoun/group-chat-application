@@ -3,12 +3,10 @@
 #include <netinet/in.h>
 #include <unistd.h>
 
-Client::Client(const char* a_clientName, const char* a_serverSocketAddress)
+Client::Client(const char* a_serverSocketAddress)
 {
-    this->name = nullptr;
     this->serverPortNumber = 0;
     this->serverIPv4Address = 0;
-    this->setName(a_clientName);
     this->setServerSocketAddress(a_serverSocketAddress);
 
     this->fileDescriptor = socket(AF_INET, SOCK_STREAM, 0);
@@ -20,12 +18,10 @@ Client::Client(const char* a_clientName, const char* a_serverSocketAddress)
     this->connectToServer();
 }
 
-Client::Client(const char* a_clientName, const char* a_serverIPv4Address, const char* a_serverPortNumber)
+Client::Client(const char* a_serverIPv4Address, const char* a_serverPortNumber)
 {
-    this->name = nullptr;
     this->serverPortNumber = 0;
     this->serverIPv4Address = 0;
-    this->setName(a_clientName);
     this->setServerIPv4Address(a_serverIPv4Address);
     this->setServerPortNumber(a_serverPortNumber);
 
@@ -58,22 +54,6 @@ Client::~Client()
 {
     shutdown(this->fileDescriptor, SHUT_RDWR);
     close(this->fileDescriptor);
-    delete[] this->name;
-}
-
-void Client::setName(const char* a_clientName)
-{
-    if(this->name != nullptr) delete[] this->name;
-
-    short clientNameLength = 0;
-    while(*(a_clientName + clientNameLength) != '\0') clientNameLength++;
-
-    clientNameLength++; /* For Null Character. */
-    this->name = new char[clientNameLength];
-    for(short characterIndex = 0; characterIndex < clientNameLength; characterIndex++)
-    {
-        *(this->name + characterIndex) = *(a_clientName + characterIndex);
-    }
 }
 
 void Client::setServerSocketAddress(const char* a_serverSocketAddress)
